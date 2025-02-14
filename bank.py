@@ -1,45 +1,49 @@
+import os
 import pickle
-from account import SavingsAccount, CheckingAccount
+import logging
+from accounts import SavingsAccount, CheckingAccount
+
+SAVINGS = "savings"
+CHECKING = "checking"
 
 class Bank:
-    """
-    Represents the bank. It stores all accounts and tracks the next available account number.
-    """
-    def __init__(self):
-        self.accounts = []
-        self.next_account_number = 1
+    """Represents a bank that manages multiple accounts."""
+    def __init__(self) -> None:
+        self._accounts = []
 
-    def open_account(self, account_type: str):
+    def add_account(self, acct_type) -> None:
+        """Creates a new account (Savings or Checking) and adds it to the bank.
+        
+        Args:
+            acct_type (str): "savings" or "checking".
         """
-        Opens a new account of type 'checking' or 'savings'.
-        """
-        if account_type.lower() == "savings":
-            account = SavingsAccount(self.next_account_number)
-        elif account_type.lower() == "checking":
-            account = CheckingAccount(self.next_account_number)
+        acct_num = self._generate_account_number()
+        if acct_type.lower() == SAVINGS:
+            a = SavingsAccount(acct_num)
+        elif acct_type.lower() == CHECKING:
+            a = CheckingAccount(acct_num)
         else:
-            return None  # Should not occur with proper input
-        self.accounts.append(account)
-        self.next_account_number += 1
-        return account
+            return None
+        self._accounts.append(a)
+        logging.debug(f"Created account: {acct_num}")
 
-    def get_account_by_number(self, account_number: int):
+    def _generate_account_number(self) -> int:
+        return len(self._accounts) + 1
+
+    def show_accounts(self) -> list:
+        "Returns a list of accounts."
+        return self._accounts
+
+    def get_account(self, account_num) -> "Account" or None:
+        """Fetches an account by its number.
+        
+        Args:
+            account_num (int): Account number to search for.
+        
+        Returns:
+            Account: Matching account, or None if not found.
         """
-        Returns the account with the given account number, or None if not found.
-        """
-        for acc in self.accounts:
-            if acc.account_number == account_number:
-                return acc
+        for x in self._accounts:
+            if x.account_number == account_num:
+                return x
         return None
-    
-# Save/Load helper functions
-
-def save_bank(bank: Bank, filename: str = "bank.pickle"):
-    """Saves the bank object to a pickle file."""
-    with open(filename, "wb") as f:
-        pickle.dump(bank, f)
-
-def load_bank(filename: str = "bank.pickle") -> Bank:
-    """Loads the bank object from a pickle file."""
-    with open(filename, "rb") as f:
-        return pickle.load(f)
